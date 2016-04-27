@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Signal and Systems</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<link href="noUiSlider.8.0.2/nouislider.css" rel="stylesheet">
+	<script src="noUiSlider.8.0.2/nouislider.js"></script>
+    <script src="processing.js"></script>
+</head>
+ 
+<body>
+	<div class="container">
+		<div class="col-md-4"></div>
+		<div class="col-md-4"><h2>Signal Sampling</h2></div>
+		<div class="col-md-4"></div>
+	</div>
+
+    <div class="container-fluid">
+    	<div class="col-lg-6">
+	        <h3>Signal = x(t)</h3>
+	        <button type="button" class="btn btn-default" id="sin">x(t) = Acos(&#969;t)</button>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<button type="button" class="btn btn-default" id="cos">x(t) = Asin(&#969;t)</button>  <div id="signal-type" hidden>sin</div>	
+
+			<br><br>
+	        <canvas id="processing-canvas"></canvas>
+	        <br><br>
+	        
+          	<div class="col-xs-5">
+          		<div id="slider"></div><br>
+          		<p>Frequency = <span id="slider-range-frequency"><span></p>
+          	</div>
+        
+          	<span class="tab"></span>
+        
+          	<div class="col-xs-5">
+          		<div id="slider2"></div><br>
+          		<p>Amplitude = <span id="slider-range-amplitude"><span></p>
+          	</div>
+	        
+	    </div>
+
+	    <div class="col-lg-6">
+	    	<br><br>
+	    	<h3>Sampled signal</h3>
+	        <canvas id="processing-canvas-sample-signal"> </canvas>
+	        <br><br>
+	        
+	        <div class="row">
+	          	<div class="col-xs-6">
+	          		<div id="slider-sample-signal" hidden></div><br>
+	          		<span id="slider-range-frequency-sample-signal"><span></p>
+	          	</div>
+	        </div>
+	    </div>
+    </div>
+
+    <div class="container-fluid">
+    	<div class="col-lg-6">
+	    	<h3>Signal = s(t)</h3>
+	    	<div class="col-xs-6">
+          		<div id="slider-sample"></div><br>
+          		<span id="slider-range-frequency-sample"><span></p>
+          	</div>
+
+	        <canvas id="processing-canvas-sample"> </canvas>
+	        <br><br>
+        </div>
+    </div>
+    <br><br>
+
+</body>
+<!-- -------------------------------------------------------------------------- -->
+
+<script>
+document.getElementById("sin").addEventListener("click", function(){
+	document.getElementById('signal-type').innerHTML = "sin";
+});
+
+document.getElementById("cos").addEventListener("click", function(){
+	document.getElementById('signal-type').innerHTML = "cos";
+});
+</script>
+
+<script type="text/processing" data-processing-target="processing-canvas"> 
+float x1,y1, x2,y2;
+int x_scale=600, y_scale=300;
+
+float a=0.01;
+float w = 1;
+float amp=1;
+
+//----------------------------------------------------------------
+var rangeSlider = document.getElementById('slider');
+noUiSlider.create(rangeSlider, {
+	start: [ 5 ],
+	range: {
+		'min': [ 0 ],
+		'max': [ 50 ]
+	}
+});
+var rangeSliderValueElement = document.getElementById('slider-range-frequency');
+rangeSlider.noUiSlider.on('update', function( values, handle ) {
+	rangeSliderValueElement.innerHTML = values[handle];
+	w = values[handle];
+	draw();
+});
+
+
+var rangeSlider2 = document.getElementById('slider2');
+noUiSlider.create(rangeSlider2, {
+	start: [ 1 ],
+	range: {
+		'min': [ 0 ],
+		'max': [ 10 ]
+	}
+});
+
+var rangeSliderValueElement2 = document.getElementById('slider-range-amplitude');
+rangeSlider2.noUiSlider.on('update', function( values2, handle2 ) {
+	rangeSliderValueElement2.innerHTML = values2[handle2];
+	amp = values2[handle2];
+	draw();
+});
+
+void setup(){
+    size(x_scale, y_scale);
+}
+
+void draw(){
+  background(200);
+  
+  stroke(100);  
+  var g = Number( (mouseX-x_scale/2) * a ).toFixed(2);
+  var h = Number( (mouseY-y_scale/2) * (-1) / 100).toFixed(2);
+  text(g+","+h,mouseX,mouseY);
+  String name = document.getElementById('signal-type').innerHTML;
+  if(name.localeCompare("sin")){
+  	for(int i=0;i<=x_scale;i++){
+      x1 = i;
+      y1 = y_scale/2 - amp*100*sin(a*w*(x1-x_scale/2));
+      x2 = i+1;
+      y2 = y_scale/2 - amp*100*sin(a*w*(x2-x_scale/2));
+      stroke(0);
+      line(x1,y1,x2,y2);
+  	}	
+  }
+  else{
+  	for(int i=0;i<=x_scale;i++){
+      x1 = i;
+      y1 = y_scale/2 - amp*100*cos(a*w*(x1-x_scale/2));
+      x2 = i+1;
+      y2 = y_scale/2 - amp*100*cos(a*w*(x2-x_scale/2));
+      stroke(0);
+      line(x1,y1,x2,y2);
+  	}		
+  }
+
+  fill(0, 102, 153);
+  stroke(255,0,0);
+  float p = 2*3.14/(w*a);
+  String data="";
+
+  int i=x_scale/2;
+  float q=i;
+  while(i<x_scale){
+  	line(q,0,q,y_scale);
+  	data = Number(((q-x_scale/2)*a).toFixed(2)).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.ceil(q);
+  	q = q+p;
+  }
+
+  i = x_scale/2;
+  q = i;
+  while(i>0){
+  	line(q,0,q,y_scale);
+  	data = Number(((q-x_scale/2)*a).toFixed(2)).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.floor(q);
+  	q = q-p;
+  }
+
+  stroke(255,0,0);
+  for(int i=0;i<y_scale;i+=(y_scale/4)){
+	line(0,i,x_scale,i);
+	data = Number(((i-y_scale/2)*(-1)/100).toFixed(2)).toString();
+	text(data,10,i);	
+  }
+
+  stroke(0,255,255);  
+  line(0,y_scale/2,x_scale,y_scale/2);
+  line(x_scale/2,0,x_scale/2,y_scale);   
+
+}     
+</script>
+
+<script type="text/processing" data-processing-target="processing-canvas-sample">
+float x1,y1, x2,y2, p1,q1, p2,q2;
+int x_scale=600, y_scale=300; 
+int T = 40;
+float a=0.01;
+
+var rangeSlidersample = document.getElementById('slider-sample');
+noUiSlider.create(rangeSlidersample, {
+	start: [ 40 ],
+	range: {
+		'min': [ 1 ],
+		'max': [ 400 ]
+	}
+});
+var rangeSliderValueElementsample = document.getElementById('slider-range-frequency-sample');
+rangeSlidersample.noUiSlider.on('update', function( values, handle ) {
+	rangeSliderValueElementsample.innerHTML = Math.floor(values[handle]);
+	T = Math.floor(values[handle]);
+	draw();
+});
+
+void setup(){
+    size(x_scale, y_scale);
+}
+
+void draw(){
+  background(200);
+  stroke(0,255,255);  
+  line(0,y_scale/2,x_scale,y_scale/2);
+  line(x_scale/2,0,x_scale/2,y_scale);   
+
+  stroke(100);  
+  var g = Number( (mouseX-x_scale/2) * a ).toFixed(2);
+  var h = Number( (mouseY-y_scale/2) * (-1) / 100).toFixed(2);
+  text(g+","+h,mouseX,mouseY);
+  for(int i=x_scale/2;i<=x_scale;i+=T){
+      x1 = i;
+      y1 = y_scale/2;
+      x2 = i;
+      y2 = y_scale/2-100;
+
+      p1 = x1-5;
+      p2 = x1+5;
+      q1 = y2+5;
+      q2 = q1;
+
+      stroke(0);
+      line(x1,y1,x2,y2);
+      line(p1,q1,x2,y2);
+      line(p2,q2,x2,y2);
+  }
+  for(int i=x_scale/2-T;i>=0;i-=T){
+      x1 = i;
+      y1 = y_scale/2;
+      x2 = i;
+      y2 = y_scale/2-100;
+
+      p1 = x1-5;
+      p2 = x1+5;
+      q1 = y2+5;
+      q2 = q1;
+
+      stroke(0);
+      line(x1,y1,x2,y2);
+      line(p1,q1,x2,y2);
+      line(p2,q2,x2,y2);
+  }
+
+  fill(0, 102, 153);
+  String data="";
+
+  int i=x_scale/2;
+  int q=i;
+  while(i<x_scale){
+  	data = Number( ( (q-x_scale/2)*a ).toFixed(2) ).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.ceil(q);
+  	q = q+T;
+  }
+
+  i = x_scale/2;
+  q = i;
+  while(i>0){
+  	data = Number(((q-x_scale/2)*a).toFixed(2)).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.floor(q);
+  	q = q-T;
+  }
+} 
+</script> 
+
+
+<script type="text/processing" data-processing-target="processing-canvas-sample-signal">
+float x1,y1, x2,y2, p1,q1, p2,q2;
+int x_scale=600, y_scale=300; 
+int T = 40, T1 = 40;
+float amp=1,w=1,a=0.01;
+float amp1=1;w1=1;
+String d,b,c;
+
+setInterval(function (){
+	d = document.getElementById('slider-range-frequency').innerHTML;
+	b = document.getElementById('slider-range-amplitude').innerHTML;
+	c = document.getElementById('slider-range-frequency-sample').innerHTML;
+	w1 = parseFloat(d);
+	amp1 = parseFloat(b);
+	T1 = parseInt(c);
+	if((w1!=w) || (T1!=T) || (amp1!=amp)){
+		draw();
+		w = w1;
+		T = T1;
+		amp = amp1;																			  
+	}
+},1000);
+
+void setup(){
+    size(x_scale, y_scale);
+}
+
+void draw(){
+  background(200);
+  stroke(0,255,255);  
+  line(0,y_scale/2,x_scale,y_scale/2);
+  line(x_scale/2,0,x_scale/2,y_scale);   
+
+  stroke(100);  
+  var g = Number( (mouseX-x_scale/2) * a ).toFixed(2);
+  var h = Number( (mouseY-y_scale/2) * (-1) / 100).toFixed(2);
+  text(g+","+h,mouseX,mouseY);
+  String name = document.getElementById('signal-type').innerHTML;
+  if(name.localeCompare("sin")){
+	  for(int i=x_scale/2;i<=x_scale;i+=T){
+	      x1 = i;
+	      y1 = y_scale/2;
+	      x2 = i;
+	      y2 = y_scale/2 - amp*100*sin(a*w*(x2-x_scale/2));
+
+	      p1 = x1-5;
+	      p2 = x1+5;
+	      q1 = y2-5*Math.sign(y2-y_scale/2);
+	      q2 = q1;
+
+	      stroke(0);
+	      line(x1,y1,x2,y2);
+	      line(p1,q1,x2,y2);
+	      line(p2,q2,x2,y2);
+	  }
+
+	  for(int i=x_scale/2-T;i>=0;i-=T){
+	      x1 = i;
+	      y1 = y_scale/2;
+	      x2 = i;
+	      y2 = y_scale/2 - amp*100*sin(a*w*(x2-x_scale/2));
+
+	      p1 = x1-5;
+	      p2 = x1+5;
+	      q1 = y2-5*Math.sign(y2-y_scale/2);
+	      q2 = q1;
+
+	      stroke(0);
+	      line(x1,y1,x2,y2);
+	      line(p1,q1,x2,y2);
+	  	  line(p2,q2,x2,y2);  
+	  }
+  }
+  else{
+  	  for(int i=x_scale/2;i<=x_scale;i+=T){
+	      x1 = i;
+	      y1 = y_scale/2;
+	      x2 = i;
+	      y2 = y_scale/2 - amp*100*cos(a*w*(x2-x_scale/2));
+
+	      p1 = x1-5;
+	      p2 = x1+5;
+	      q1 = y2-5*Math.sign(y2-y_scale/2);
+	      q2 = q1;
+
+	      stroke(0);
+	      line(x1,y1,x2,y2);
+	      line(p1,q1,x2,y2);
+	      line(p2,q2,x2,y2);
+	  }
+
+	  for(int i=x_scale/2-T;i>=0;i-=T){
+	      x1 = i;
+	      y1 = y_scale/2;
+	      x2 = i;
+	      y2 = y_scale/2 - amp*100*cos(a*w*(x2-x_scale/2));
+
+	      p1 = x1-5;
+	      p2 = x1+5;
+	      q1 = y2-5*Math.sign(y2-y_scale/2);
+	      q2 = q1;
+
+	      stroke(0);
+	      line(x1,y1,x2,y2);
+	      line(p1,q1,x2,y2);
+	  	  line(p2,q2,x2,y2);  
+	  }
+  }
+
+  fill(0, 102, 153);
+  String data="";
+
+  int i=x_scale/2;
+  int q=i;
+  while(i<x_scale){
+  	data = Number( ( (q-x_scale/2)*a ).toFixed(2) ).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.ceil(q);
+  	q = q+T;
+  }
+
+  i = x_scale/2;
+  q = i;
+  while(i>0){
+  	data = Number(((q-x_scale/2)*a).toFixed(2)).toString();
+  	text(data,q,y_scale/2+20);
+  	i = Math.floor(q);
+  	q = q-T;
+  }
+
+} 
+</script> 
+
+</html>
